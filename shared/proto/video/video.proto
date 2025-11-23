@@ -1,0 +1,111 @@
+syntax = "proto3";
+
+package video;
+
+option go_package = "github.com/dmehra2102/learning-platform/shared/proto/video";
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/empty.proto";
+
+service VideoService {
+    rpc UploadVideo(stream UploadVideoRequest) returns (UploadVideoResponse);
+    rpc GetVideo(GetVideoRequest) returns (VideoResponse);
+    rpc GetVideoStream(GetVideoStreamUrlRequest) returns (VideoStreamUrlResponse);
+    rpc DeleteVideo(DeleteVideoRequest) returns (google.protobuf.Empty);
+    rpc UpdateVideoMetadata(UpdateVideoMetadataRequest) returns (VideoResponse);
+    rpc GetVideosByIds(GetVideosByIdsRequest) returns (GetVideosByIdsResponse);
+    rpc GetVideoProcessingStatus(GetVideoProcessingStatusRequest) returns (VideoProcessingStatusResponse);
+}
+
+enum VideoStatus {
+    UPLOADING = 0;
+    PROCESSING = 1;
+    READY = 2;
+    FAILED = 3;
+}
+
+enum VideoQuality {
+    SD_360 = 0;
+    SD_480 = 1;
+    HD_720 = 2;
+    HD_1080 = 3;
+}
+
+message Video {
+    string id = 1;
+    string title = 2;
+    string description = 3;
+    string uploader_id = 4;
+    VideoStatus status = 5;
+    int64 size_bytes = 6;
+    int32 duration_seconds = 7;
+    string thumbnail_url = 8;
+    repeated VideoQuality available_qualities = 9;
+    google.protobuf.Timestamp created_at = 10;
+    google.protobuf.Timestamp updated_at = 11;
+}
+
+message UploadVideoRequest {
+  oneof data {
+    VideoMetadata metadata = 1;
+    bytes chunk = 2;
+  }
+}
+
+message VideoMetadata {
+  string title = 1;
+  string description = 2;
+  string uploader_id = 3;
+}
+
+message UploadVideoResponse {
+  string video_id = 1;
+  string message = 2;
+}
+
+message GetVideoRequest {
+  string id = 1;
+}
+
+message VideoResponse {
+  Video video = 1;
+}
+
+message GetVideoStreamUrlRequest {
+  string id = 1;
+  VideoQuality quality = 2;
+}
+
+message VideoStreamUrlResponse {
+  string stream_url = 1;
+  int32 expires_in_seconds = 2;
+}
+
+message DeleteVideoRequest {
+  string id = 1;
+}
+
+message UpdateVideoMetadataRequest {
+  string id = 1;
+  optional string title = 2;
+  optional string description = 3;
+}
+
+message GetVideosByIdsRequest {
+  repeated string ids = 1;
+}
+
+message GetVideosByIdsResponse {
+  repeated Video videos = 1;
+}
+
+message GetVideoProcessingStatusRequest {
+  string id = 1;
+}
+
+message VideoProcessingStatusResponse {
+  string id = 1;
+  VideoStatus status = 2;
+  int32 processing_percentage = 3;
+  string message = 4;
+}
