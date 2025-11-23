@@ -1,0 +1,98 @@
+syntax = "proto3";
+
+package enrollment;
+
+option go_package = "github.com/dmehra2102/learning-platform/shared/proto/enrollment";
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/empty.proto";
+
+service EnrollmentService {
+    rpc EnrollCourse(EnrollCourseRequest) returns (EnrollmentResponse);
+    rpc GetEnrollment(GetEnrollmentRequest) returns (EnrollmentResponse);
+    rpc ListEnrollments(ListEnrollmentsRequest) returns (ListEnrollmentsResponse);
+    rpc GetStudentEnrollments(GetStudentEnrollmentsRequest) returns (ListEnrollmentsResponse);
+    rpc GetCourseEnrollments(GetCourseEnrollmentsRequest) returns (ListEnrollmentsResponse);
+    rpc CancelEnrollment(CancelEnrollmentRequest) returns (google.protobuf.Empty);
+    rpc CompleteEnrollment(CompleteEnrollmentRequest) returns (EnrollmentResponse);
+    rpc IsUserEnrolled(IsUserEnrolledRequest) returns (IsUserEnrolledResponse);
+}
+
+enum EnrollmentStatus {
+    PENDING = 0;
+    ACTIVE = 1;
+    COMPLETED = 2;
+    CANCELLED = 3;
+    REFUNDED = 4;
+}
+
+message Enrollment {
+    string id = 1;
+    string user_id = 2;
+    string course_id = 3;
+    EnrollmentStatus status = 4;
+    double amount_paid = 5;
+    string payment_id = 6;
+    google.protobuf.Timestamp enrolled_at = 7;
+    google.protobuf.Timestamp completed_at = 8;
+    int32 progress_percentage = 9;
+}
+
+message EnrollCourseRequest {
+    string user_id = 1;
+    string course_id = 2;
+    string payment_method = 3;
+    double amount = 4;
+}
+
+message EnrollmentResponse {
+    Enrollment enrollment = 1;
+}
+
+message GetEnrollmentRequest {
+    string id = 1;
+}
+
+message ListEnrollmentsRequest {
+  int32 page = 1;
+  int32 page_size = 2;
+  optional EnrollmentStatus status = 3;
+}
+
+message ListEnrollmentsResponse {
+    repeated Enrollment enrollments = 1;
+    int32 total = 2;
+    int32 page = 3;
+    int32 page_size = 4;
+}
+
+message GetStudentEnrollmentsRequest {
+    string user_id = 1;
+    int32 page = 2;
+    int32 page_size = 3;
+}
+
+message GetCourseEnrollmentsRequest {
+    string course_id = 1;
+    int32 page = 2;
+    int32 page_size = 3;
+}
+
+message CancelEnrollmentRequest {
+  string id = 1;
+  string reason = 2;
+}
+
+message CompleteEnrollmentRequest {
+  string id = 1;
+}
+
+message IsUserEnrolledRequest {
+  string user_id = 1;
+  string course_id = 2;
+}
+
+message IsUserEnrolledResponse {
+  bool enrolled = 1;
+  string enrollment_id = 2;
+}
