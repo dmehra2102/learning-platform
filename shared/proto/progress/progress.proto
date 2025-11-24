@@ -1,0 +1,88 @@
+syntax = "proto3";
+
+package progress;
+
+option go_package = "github.com/dmehra2102/learning-platform/shared/proto/progress";
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/empty.proto";
+
+service ProgressService {
+    rpc TrackProgress(TrackProgressRequest) returns (ProgressResponse);
+    rpc GetLessonProgress(GetLessonProgressRequest) returns (LessonProgressResponse);
+    rpc GetCourseProgress(GetCourseProgressRequest) returns (CourseProgressRequest);
+    rpc GetUserProgress(GetUserProgressRequest) returns (UserProgressResponse);
+    rpc MarkLessonComplete(MarkLessonCompleteRequest) returns (LessonProgressResponse);
+    rpc ResetCourseProgress(ResetCourseProgressRequest) returns (google.protobuf.Empty);
+}
+
+message LessonProgress {
+    string id = 1;
+    string user_id = 2;
+    string lesson_id = 3;
+    int32 watch_time_seconds = 4;
+    int32 total_duration_seconds = 5;
+    bool completed = 6;
+    google.protobuf.Timestamp last_watched_at = 7;
+    google.protobuf.Timestamp completed_at = 8;
+}
+
+message CourseProgress {
+    string user_id = 1;
+    string course_id = 2;
+    int32 completed_lessons = 3;
+    int32 total_lessons = 4;
+    int32 progress_percentage = 5;
+    google.protobuf.Timestamp last_accessed_at = 6;
+}
+
+message TrackProgressRequest {
+    string user_id = 1;
+    string lesson_id = 2;
+    int32 watch_time_seconds = 3;
+}
+
+message ProgressResponse {
+    bool success = 1;
+    string message = 2;
+}
+
+message GetLessonProgressRequest {
+    string user_id = 1;
+    string lesson_id = 2;
+}
+
+message LessonProgressResponse {
+    LessonProgress progress = 1;
+}
+
+message GetCourseProgressRequest {
+    string user_id = 1;
+    string course_id = 2;
+}
+
+message CourseProgressResponse {
+    CourseProgress progress = 1;
+    repeated LessonProgress lesson_progresses = 2;
+}
+
+message GetUserProgressRequest {
+    string user_id = 1;
+    int32 page = 2;
+    int32 page_size = 3;
+}
+
+message UserProgressResponse {
+    repeated CourseProgress courses = 1;
+    int32 total = 2;
+}
+
+message MarkLessonCompleteRequest {
+    string user_id = 1;
+    string lesson_id = 2;
+}
+
+message ResetCourseProgressRequest {
+    string user_id = 1;
+    string course_id = 2;
+}
