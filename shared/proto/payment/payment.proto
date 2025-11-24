@@ -1,0 +1,94 @@
+syntax = "proto3";
+
+package payment;
+
+option go_package = "github.com/dmehra2102/learning-platform/shared/proto/payment";
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/empty.proto";
+
+service PaymentService {
+    rpc ProcessPayment(ProcessPaymentRequest) returns (PaymentResponse);
+    rpc GetPayment(GetPaymentRequest) returns (PaymentResponse);
+    rpc ListPayments(ListPaymentsRequest) returns (ListPaymentsResponse);
+    rpc RefundPayment(RefundPaymentRequest) returns (RefundResponse);
+    rpc GetUserPayments(GetUserPaymentsRequest) returns (ListPaymentsResponse);
+}
+
+enum PaymentStatus {
+    PENDING = 0;
+    PROCESSING = 1;
+    COMPLETED = 2;
+    FAILED = 3;
+    REFUNDED = 4;
+}
+
+enum PaymentMethod {
+    CREDIT_CARD = 0;
+    DEBIT_CARD = 1;
+    PAYTM = 2;
+    STRIPE = 3;
+}
+
+message Payment {
+    string id = 1;
+    string user_id = 2;
+    string course_id = 3;
+    double amount = 4;
+    string currency = 5;
+    PaymentStatus status = 6;
+    PaymentMethod method = 7;
+    string transaction_id = 8;
+    string gateway_response = 9;
+    google.protobuf.Timestamp created_at = 10;
+    google.protobuf.Timestamp updated_at = 11;
+}
+
+message ProcessPaymentRequest {
+    string user_id = 1;
+    string course_id = 2;
+    double amount = 3;
+    string currency = 4;
+    PaymentMethod method = 5;
+    string payment_token = 6;
+}
+
+message PaymentResponse {
+    Payment payment = 1;
+}
+
+message GetPaymentRequest {
+    string id = 1;
+}
+
+message ListPaymentsRequest {
+    int32 page = 1;
+    int32 page_size = 2;
+    optional PaymentStatus status = 3;
+}
+
+message ListPaymentsResponse {
+    repeated Payment payments = 1;
+    int32 total = 2;
+    int32 page = 3;
+    int32 page_size = 4;
+}
+
+message RefundPaymentRequest {
+    string id = 1;
+    string reason = 2;
+}
+
+message RefundResponse {
+    string id = 1;
+    string original_payment_id = 2;
+    double refund_amount = 3;
+    PaymentStatus status = 4;
+    google.protobuf.Timestamp refunded_at = 5;
+}
+
+message GetUserPaymentsRequest {
+    string user_id = 1;
+    int32 page = 2;
+    int32 page_size = 3;
+}
