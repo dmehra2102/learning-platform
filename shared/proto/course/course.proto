@@ -9,7 +9,7 @@ import "google/protobuf/empty.proto";
 
 service CourseService {
     rpc CreateCourse(CreateCourseRequest) returns (CourseResponse);
-    rpc GetCourse(GetCourseRquest) returns (CourseResponse);
+    rpc GetCourse(GetCourseRequest) returns (CourseResponse);
     rpc UpdateCourse(UpdateCourseRequest) returns (CourseResponse);
     rpc DeleteCourse(DeleteCourseRequest) returns (google.protobuf.Empty);
     rpc ListCourses(ListCoursesRequest) returns (ListCoursesResponse);

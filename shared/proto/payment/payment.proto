@@ -5,7 +5,6 @@ package payment;
 option go_package = "github.com/dmehra2102/learning-platform/shared/proto/payment";
 
 import "google/protobuf/timestamp.proto";
-import "google/protobuf/empty.proto";
 
 service PaymentService {
     rpc ProcessPayment(ProcessPaymentRequest) returns (PaymentResponse);

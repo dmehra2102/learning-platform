@@ -10,7 +10,7 @@ import "google/protobuf/empty.proto";
 service ProgressService {
     rpc TrackProgress(TrackProgressRequest) returns (ProgressResponse);
     rpc GetLessonProgress(GetLessonProgressRequest) returns (LessonProgressResponse);
-    rpc GetCourseProgress(GetCourseProgressRequest) returns (CourseProgressRequest);
+    rpc GetCourseProgress(GetCourseProgressRequest) returns (CourseProgressResponse);
     rpc GetUserProgress(GetUserProgressRequest) returns (UserProgressResponse);
     rpc MarkLessonComplete(MarkLessonCompleteRequest) returns (LessonProgressResponse);
     rpc ResetCourseProgress(ResetCourseProgressRequest) returns (google.protobuf.Empty);
