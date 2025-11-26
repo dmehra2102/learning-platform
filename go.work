@@ -1,0 +1,14 @@
+go 1.25.1
+
+use (
+    ./shared
+    ./user-service
+    // ./course-service
+    // ./enrollment-service
+    // ./notification-service
+    // ./payment-service
+    // ./progress-service
+    // ./review-service
+    // ./api-gateway
+    // ./video-service
+)
