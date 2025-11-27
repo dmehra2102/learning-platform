@@ -5,6 +5,7 @@ go 1.25.1
 require (
 	github.com/dmehra2102/learning-platform/shared v0.0.0-20251126165859-23e8407d77c6
 	github.com/google/uuid v1.6.0
+	github.com/joho/godotenv v1.5.1
 	go.uber.org/zap v1.27.1
 	golang.org/x/crypto v0.45.0
 	google.golang.org/grpc v1.77.0
