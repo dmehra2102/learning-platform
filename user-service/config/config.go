@@ -3,6 +3,8 @@ package config
 import (
 	"log"
 	"os"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/dmehra2102/learning-platform/shared/pkg/database"
@@ -42,13 +44,13 @@ func Load() Config {
 		},
 		Database: database.Config{
 			Host:            getEnv("DB_HOST", "localhost"),
-			Port:            5432,
+			Port:            getIntEnv("DB_PORT", 5432),
 			User:            getEnv("DB_USER", "postgres"),
 			Password:        getEnv("DB_PASSWORD", "postgres"),
 			DBName:          getEnv("DB_NAME", "user_db"),
 			SSLMode:         "disable",
-			MaxOpenConns:    25,
-			MaxIdleConns:    5,
+			MaxOpenConns:    getIntEnv("DB_MAX_OPEN_CONNS", 25),
+			MaxIdleConns:    getIntEnv("DB_MAX_IDLE_CONNS", 5),
 			ConnMaxLifetime: 5 * time.Minute,
 			ConnMaxIdleTime: 10 * time.Minute,
 		},
@@ -58,7 +60,7 @@ func Load() Config {
 			RefreshTokenTTL: 7 * 24 * time.Hour,
 		},
 		Kafka: KafkaConfig{
-			Brokers: []string{getEnv("KAFKA_BROKERS", "localhost:9092")},
+			Brokers: getSliceEnv("KAFKA_BROKERS", []string{"localhost:9092"}),
 		},
 	}
 }
@@ -66,6 +68,22 @@ func Load() Config {
 func getEnv(key, defaultValue string) string {
 	if value := os.Getenv(key); value != "" {
 		return value
+	}
+	return defaultValue
+}
+
+func getIntEnv(key string, defaultValue int) int {
+	if value := os.Getenv(key); value != "" {
+		if result, err := strconv.Atoi(key); err == nil {
+			return result
+		}
+	}
+	return defaultValue
+}
+
+func getSliceEnv(key string, defaultValue []string) []string {
+	if value := os.Getenv(key); value != "" {
+		return strings.Split(value, ",")
 	}
 	return defaultValue
 }
