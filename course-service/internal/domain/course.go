@@ -35,7 +35,7 @@ type Course struct {
 	Status          CourseStatus
 	Level           CourseLevel
 	Price           float64
-	Catgeory        string
+	Category        string
 	Tags            []string
 	DurationMinutes int
 	CreatedAt       time.Time
