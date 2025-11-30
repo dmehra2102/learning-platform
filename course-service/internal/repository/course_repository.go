@@ -17,6 +17,8 @@ type CourseRepository interface {
 	Delete(ctx context.Context, id string) error
 	List(ctx context.Context, page, pageSize int, category, status, search *string, level *domain.CourseLevel) ([]*domain.Course, int, error)
 	GetByInstructor(ctx context.Context, instructorID string, page, pageSize int) ([]*domain.Course, int, error)
+	UpdateEnrolledCount(ctx context.Context, courseID string, increment int) error
+	UpdateAverageRating(ctx context.Context, courseID string, rating float64) error
 }
 
 type courseRepository struct {
@@ -40,7 +42,11 @@ func (r *courseRepository) Create(ctx context.Context, course *domain.Course) er
 		course.CreatedAt, course.UpdatedAt,
 	)
 
-	return err
+	if err != nil {
+		return fmt.Errorf("failed to create course: %w", err)
+	}
+
+	return nil
 }
 
 func (r *courseRepository) GetByID(ctx context.Context, id string) (*domain.Course, error) {
@@ -60,7 +66,7 @@ func (r *courseRepository) GetByID(ctx context.Context, id string) (*domain.Cour
 		return nil, domain.ErrCourseNotFound
 	}
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to get course: %w", err)
 	}
 
 	return &course, nil
@@ -80,7 +86,7 @@ func (r *courseRepository) Update(ctx context.Context, course *domain.Course) er
 	)
 
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to update course: %w", err)
 	}
 	rows, _ := result.RowsAffected()
 	if rows == 0 {
@@ -94,7 +100,7 @@ func (r *courseRepository) Delete(ctx context.Context, id string) error {
 	query := `DELETE FROM courses WHERE id = $1`
 	result, err := r.db.ExecContext(ctx, query, id)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to delete course: %w", err)
 	}
 
 	rows, _ := result.RowsAffected()
@@ -143,7 +149,7 @@ func (r *courseRepository) List(ctx context.Context, page, pageSize int, categor
 
 	var total int
 	if err := r.db.QueryRowContext(ctx, countQuery, args...).Scan(&total); err != nil {
-		return nil, 0, err
+		return nil, 0, fmt.Errorf("failed to count courses: %w", err)
 	}
 
 	query += fmt.Sprintf(" ORDER BY created_at DESC LIMIT $%d OFFSET $%d", argCount, argCount+1)
@@ -151,7 +157,7 @@ func (r *courseRepository) List(ctx context.Context, page, pageSize int, categor
 
 	rows, err := r.db.QueryContext(ctx, query, args...)
 	if err != nil {
-		return nil, 0, err
+		return nil, 0, fmt.Errorf("failed to list courses: %w", err)
 	}
 	defer rows.Close()
 
@@ -164,7 +170,7 @@ func (r *courseRepository) List(ctx context.Context, page, pageSize int, categor
 			&course.Category, pq.Array(&course.Tags), &course.DurationMinutes,
 			&course.CreatedAt, &course.UpdatedAt, &course.EnrolledCount, &course.AverageRating,
 		); err != nil {
-			return nil, 0, err
+			return nil, 0, fmt.Errorf("failed to scan course: %w", err)
 		}
 		courses = append(courses, &course)
 	}
@@ -178,7 +184,7 @@ func (r *courseRepository) GetByInstructor(ctx context.Context, instructorID str
 	countQuery := `SELECT COUNT(*) FROM courses WHERE instructor_id = $1`
 	var total int
 	if err := r.db.QueryRowContext(ctx, countQuery, instructorID).Scan(&total); err != nil {
-		return nil, 0, err
+		return nil, 0, fmt.Errorf("failed to count courses: %w", err)
 	}
 
 	query := `
@@ -190,7 +196,7 @@ func (r *courseRepository) GetByInstructor(ctx context.Context, instructorID str
 
 	rows, err := r.db.QueryContext(ctx, query, instructorID, pageSize, offset)
 	if err != nil {
-		return nil, 0, err
+		return nil, 0, fmt.Errorf("failed to list courses: %w", err)
 	}
 	defer rows.Close()
 
@@ -203,10 +209,50 @@ func (r *courseRepository) GetByInstructor(ctx context.Context, instructorID str
 			&course.Category, pq.Array(&course.Tags), &course.DurationMinutes,
 			&course.CreatedAt, &course.UpdatedAt, &course.EnrolledCount, &course.AverageRating,
 		); err != nil {
-			return nil, 0, err
+			return nil, 0, fmt.Errorf("failed to scan course: %w", err)
 		}
 		courses = append(courses, &course)
 	}
 
 	return courses, total, nil
+}
+
+func (r *courseRepository) UpdateEnrolledCount(ctx context.Context, courseID string, increment int) error {
+	query := `
+		UPDATE courses
+		SET enrolled_count = enrolled_count + $1
+		WHERE id = $2
+	`
+
+	result, err := r.db.ExecContext(ctx, query, increment, courseID)
+	if err != nil {
+		return fmt.Errorf("failed to update enrolled count: %w", err)
+	}
+
+	rows, _ := result.RowsAffected()
+	if rows == 0 {
+		return domain.ErrCourseNotFound
+	}
+
+	return nil
+}
+
+func (r *courseRepository) UpdateAverageRating(ctx context.Context, courseID string, rating float64) error {
+	query := `
+		UPDATE courses
+		SET average_rating = $1
+		WHERE id = $2
+	`
+
+	result, err := r.db.ExecContext(ctx, query, rating, courseID)
+	if err != nil {
+		return fmt.Errorf("failed to update average rating: %w", err)
+	}
+
+	rows, _ := result.RowsAffected()
+	if rows == 0 {
+		return domain.ErrCourseNotFound
+	}
+
+	return nil
 }

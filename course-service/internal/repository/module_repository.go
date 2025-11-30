@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"database/sql"
+	"fmt"
 
 	"github.com/dmehra2102/learning-platform/course-service/internal/domain"
 	"github.com/dmehra2102/learning-platform/shared/pkg/database"
@@ -14,6 +15,7 @@ type ModuleRepository interface {
 	GetByCourseID(ctx context.Context, courseID string) ([]*domain.Module, error)
 	Update(ctx context.Context, module *domain.Module) error
 	Delete(ctx context.Context, id string) error
+	GetMaxOrderIndex(ctx context.Context, courseID string) (int, error)
 }
 
 type moduleRepository struct {
@@ -34,7 +36,11 @@ func (r *moduleRepository) Create(ctx context.Context, module *domain.Module) er
 		module.ID, module.CourseID, module.Title, module.Description, module.OrderIndex, module.CreatedAt,
 	)
 
-	return err
+	if err != nil {
+		return fmt.Errorf("failed to create module: %w", err)
+	}
+
+	return nil
 }
 
 func (r *moduleRepository) GetByID(ctx context.Context, id string) (*domain.Module, error) {
@@ -49,6 +55,9 @@ func (r *moduleRepository) GetByID(ctx context.Context, id string) (*domain.Modu
 	if err == sql.ErrNoRows {
 		return nil, domain.ErrCourseNotFound
 	}
+	if err != nil {
+		return nil, fmt.Errorf("failed to get module: %w", err)
+	}
 
 	return &module, nil
 }
@@ -61,7 +70,7 @@ func (r *moduleRepository) GetByCourseID(ctx context.Context, courseID string) (
 
 	rows, err := r.db.QueryContext(ctx, query, courseID)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to list modules: %w", err)
 	}
 	defer rows.Close()
 
@@ -76,7 +85,7 @@ func (r *moduleRepository) GetByCourseID(ctx context.Context, courseID string) (
 			&module.OrderIndex,
 			&module.CreatedAt,
 		); err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed to scan module: %w", err)
 		}
 
 		modules = append(modules, &module)
@@ -90,7 +99,7 @@ func (r *moduleRepository) Update(ctx context.Context, module *domain.Module) er
 
 	result, err := r.db.ExecContext(ctx, qyery, module.Title, module.Description, module.OrderIndex, module.ID)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to update module: %w", err)
 	}
 
 	rows, _ := result.RowsAffected()
@@ -105,7 +114,7 @@ func (r *moduleRepository) Delete(ctx context.Context, id string) error {
 	query := `DELETE FROM modules WHERE id = $1`
 	result, err := r.db.ExecContext(ctx, query, id)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to delete module: %w", err)
 	}
 
 	rows, _ := result.RowsAffected()
@@ -114,4 +123,16 @@ func (r *moduleRepository) Delete(ctx context.Context, id string) error {
 	}
 
 	return nil
+}
+
+func (r *moduleRepository) GetMaxOrderIndex(ctx context.Context, courseID string) (int, error) {
+	query := `SELECT COALESCE(MAX(order_index), -1) FROM modules WHERE course_id = $1`
+
+	var maxIndex int
+	err := r.db.QueryRowContext(ctx, query, courseID).Scan(&maxIndex)
+	if err != nil {
+		return 0, fmt.Errorf("failed to get max order index: %w", err)
+	}
+
+	return maxIndex, nil
 }

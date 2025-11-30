@@ -8,6 +8,7 @@ import (
 var (
 	ErrCourseNotFound = errors.New("course not found")
 	ErrUnauthorized   = errors.New("unauthorized")
+	ErrInvalidInput   = errors.New("invalid input")
 )
 
 type CourseStatus string
@@ -63,4 +64,53 @@ type Lesson struct {
 	OrderIndex      int
 	IsPreview       bool
 	CreatedAt       time.Time
+}
+
+type CourseFilter struct {
+	page      int32
+	page_size int32
+	category  *string
+	level     *CourseLevel
+	status    *CourseStatus
+	search    *string
+}
+
+func (c *Course) Validate() error {
+	if c.Title == "" || len(c.Title) > 255 {
+		return ErrInvalidInput
+	}
+	if c.Description == "" {
+		return ErrInvalidInput
+	}
+	if c.Price < 0 {
+		return ErrInvalidInput
+	}
+	if c.Category == "" {
+		return ErrInvalidInput
+	}
+
+	return nil
+}
+
+func (m *Module) Validate() error {
+	if m.Title == "" || len(m.Title) > 255 {
+		return ErrInvalidInput
+	}
+	if m.OrderIndex < 0 {
+		return ErrInvalidInput
+	}
+	return nil
+}
+
+func (l *Lesson) Validate() error {
+	if l.Title == "" || len(l.Title) > 255 {
+		return ErrInvalidInput
+	}
+	if l.OrderIndex < 0 {
+		return ErrInvalidInput
+	}
+	if l.DurationSeconds < 0 {
+		return ErrInvalidInput
+	}
+	return nil
 }

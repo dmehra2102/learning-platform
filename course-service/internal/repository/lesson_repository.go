@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"database/sql"
+	"fmt"
 
 	"github.com/dmehra2102/learning-platform/course-service/internal/domain"
 	"github.com/dmehra2102/learning-platform/shared/pkg/database"
@@ -14,6 +15,7 @@ type LessonRepository interface {
 	GetByModuleID(ctx context.Context, moduleID string) ([]*domain.Lesson, error)
 	Update(ctx context.Context, lesson *domain.Lesson) error
 	Delete(ctx context.Context, id string) error
+	GetMaxOrderIndex(ctx context.Context, moduleID string) (int, error)
 }
 
 type lessonRepository struct {
@@ -34,7 +36,11 @@ func (r *lessonRepository) Create(ctx context.Context, lesson *domain.Lesson) er
 		lesson.VideoID, lesson.DurationSeconds, lesson.OrderIndex, lesson.IsPreview, lesson.CreatedAt,
 	)
 
-	return err
+	if err != nil {
+		return fmt.Errorf("failed to create lesson: %w", err)
+	}
+
+	return nil
 }
 
 func (r *lessonRepository) GetByID(ctx context.Context, id string) (*domain.Lesson, error) {
@@ -49,8 +55,11 @@ func (r *lessonRepository) GetByID(ctx context.Context, id string) (*domain.Less
 	if err == sql.ErrNoRows {
 		return nil, domain.ErrCourseNotFound
 	}
+	if err != nil {
+		return nil, fmt.Errorf("failed to get lesson: %w", err)
+	}
 
-	return &lesson, err
+	return &lesson, nil
 }
 
 func (r *lessonRepository) GetByModuleID(ctx context.Context, moduleID string) ([]*domain.Lesson, error) {
@@ -60,7 +69,7 @@ func (r *lessonRepository) GetByModuleID(ctx context.Context, moduleID string) (
 
 	rows, err := r.db.QueryContext(ctx, query, moduleID)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to list lessons: %w", err)
 	}
 	defer rows.Close()
 
@@ -71,7 +80,7 @@ func (r *lessonRepository) GetByModuleID(ctx context.Context, moduleID string) (
 			&lesson.ID, &lesson.ModuleID, &lesson.Title, &lesson.Description,
 			&lesson.VideoID, &lesson.DurationSeconds, &lesson.OrderIndex, &lesson.IsPreview, &lesson.CreatedAt,
 		); err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed to scan lesson: %w", err)
 		}
 
 		lessons = append(lessons, &lesson)
@@ -85,7 +94,7 @@ func (r *lessonRepository) Update(ctx context.Context, lesson *domain.Lesson) er
 
 	result, err := r.db.ExecContext(ctx, query, lesson.Title, lesson.Description, lesson.OrderIndex, lesson.IsPreview, lesson.ID)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to update lesson: %w", err)
 	}
 
 	rows, _ := result.RowsAffected()
@@ -100,7 +109,7 @@ func (r *lessonRepository) Delete(ctx context.Context, id string) error {
 	query := `DELETE FROM lessons WHERE id = $1`
 	result, err := r.db.ExecContext(ctx, query, id)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to delete lesson: %w", err)
 	}
 
 	rows, _ := result.RowsAffected()
@@ -109,4 +118,16 @@ func (r *lessonRepository) Delete(ctx context.Context, id string) error {
 	}
 
 	return nil
+}
+
+func (r *lessonRepository) GetMaxOrderIndex(ctx context.Context, moduleID string) (int, error) {
+	query := `SELECT COALESCE(MAX(order_index), -1) FROM lessons WHERE module_id = $1`
+
+	var maxIndex int
+	err := r.db.QueryRowContext(ctx, query, moduleID).Scan(&maxIndex)
+	if err != nil {
+		return 0, fmt.Errorf("failed to get max order index: %w", err)
+	}
+
+	return maxIndex, nil
 }
