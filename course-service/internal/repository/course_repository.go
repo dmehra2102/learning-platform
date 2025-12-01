@@ -15,7 +15,7 @@ type CourseRepository interface {
 	GetByID(ctx context.Context, id string) (*domain.Course, error)
 	Update(ctx context.Context, course *domain.Course) error
 	Delete(ctx context.Context, id string) error
-	List(ctx context.Context, page, pageSize int, category, status, search *string, level *domain.CourseLevel) ([]*domain.Course, int, error)
+	List(ctx context.Context, page, pageSize int, category *string, status *domain.CourseStatus, search *string, level *domain.CourseLevel) ([]*domain.Course, int, error)
 	GetByInstructor(ctx context.Context, instructorID string, page, pageSize int) ([]*domain.Course, int, error)
 	UpdateEnrolledCount(ctx context.Context, courseID string, increment int) error
 	UpdateAverageRating(ctx context.Context, courseID string, rating float64) error
@@ -111,7 +111,7 @@ func (r *courseRepository) Delete(ctx context.Context, id string) error {
 	return nil
 }
 
-func (r *courseRepository) List(ctx context.Context, page, pageSize int, category, status, search *string, level *domain.CourseLevel) ([]*domain.Course, int, error) {
+func (r *courseRepository) List(ctx context.Context, page, pageSize int, category *string, status *domain.CourseStatus, search *string, level *domain.CourseLevel) ([]*domain.Course, int, error) {
 	offset := (page - 1) * pageSize
 
 	query := `

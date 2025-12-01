@@ -66,15 +66,6 @@ type Lesson struct {
 	CreatedAt       time.Time
 }
 
-type CourseFilter struct {
-	page      int32
-	page_size int32
-	category  *string
-	level     *CourseLevel
-	status    *CourseStatus
-	search    *string
-}
-
 func (c *Course) Validate() error {
 	if c.Title == "" || len(c.Title) > 255 {
 		return ErrInvalidInput
