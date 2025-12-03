@@ -30,9 +30,11 @@ const (
 	CourseService_AddModule_FullMethodName              = "/course.CourseService/AddModule"
 	CourseService_UpdateModule_FullMethodName           = "/course.CourseService/UpdateModule"
 	CourseService_DeleteModule_FullMethodName           = "/course.CourseService/DeleteModule"
+	CourseService_GetModules_FullMethodName             = "/course.CourseService/GetModules"
 	CourseService_AddLesson_FullMethodName              = "/course.CourseService/AddLesson"
 	CourseService_UpdateLesson_FullMethodName           = "/course.CourseService/UpdateLesson"
 	CourseService_DeleteLesson_FullMethodName           = "/course.CourseService/DeleteLesson"
+	CourseService_GetLessons_FullMethodName             = "/course.CourseService/GetLessons"
 	CourseService_GetCourseContent_FullMethodName       = "/course.CourseService/GetCourseContent"
 )
 
@@ -50,9 +52,11 @@ type CourseServiceClient interface {
 	AddModule(ctx context.Context, in *AddModuleRequest, opts ...grpc.CallOption) (*ModuleResponse, error)
 	UpdateModule(ctx context.Context, in *UpdateModuleRequest, opts ...grpc.CallOption) (*ModuleResponse, error)
 	DeleteModule(ctx context.Context, in *DeleteModuleRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	GetModules(ctx context.Context, in *GetModulesRequest, opts ...grpc.CallOption) (*ListModulesResponse, error)
 	AddLesson(ctx context.Context, in *AddLessonRequest, opts ...grpc.CallOption) (*LessonResponse, error)
 	UpdateLesson(ctx context.Context, in *UpdateLessonRequest, opts ...grpc.CallOption) (*LessonResponse, error)
 	DeleteLesson(ctx context.Context, in *DeleteLessonRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	GetLessons(ctx context.Context, in *GetLessonsRequest, opts ...grpc.CallOption) (*ListLessonsResponse, error)
 	GetCourseContent(ctx context.Context, in *GetCourseContentRequest, opts ...grpc.CallOption) (*CourseContentResponse, error)
 }
 
@@ -164,6 +168,16 @@ func (c *courseServiceClient) DeleteModule(ctx context.Context, in *DeleteModule
 	return out, nil
 }
 
+func (c *courseServiceClient) GetModules(ctx context.Context, in *GetModulesRequest, opts ...grpc.CallOption) (*ListModulesResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ListModulesResponse)
+	err := c.cc.Invoke(ctx, CourseService_GetModules_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *courseServiceClient) AddLesson(ctx context.Context, in *AddLessonRequest, opts ...grpc.CallOption) (*LessonResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(LessonResponse)
@@ -194,6 +208,16 @@ func (c *courseServiceClient) DeleteLesson(ctx context.Context, in *DeleteLesson
 	return out, nil
 }
 
+func (c *courseServiceClient) GetLessons(ctx context.Context, in *GetLessonsRequest, opts ...grpc.CallOption) (*ListLessonsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ListLessonsResponse)
+	err := c.cc.Invoke(ctx, CourseService_GetLessons_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *courseServiceClient) GetCourseContent(ctx context.Context, in *GetCourseContentRequest, opts ...grpc.CallOption) (*CourseContentResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(CourseContentResponse)
@@ -218,9 +242,11 @@ type CourseServiceServer interface {
 	AddModule(context.Context, *AddModuleRequest) (*ModuleResponse, error)
 	UpdateModule(context.Context, *UpdateModuleRequest) (*ModuleResponse, error)
 	DeleteModule(context.Context, *DeleteModuleRequest) (*emptypb.Empty, error)
+	GetModules(context.Context, *GetModulesRequest) (*ListModulesResponse, error)
 	AddLesson(context.Context, *AddLessonRequest) (*LessonResponse, error)
 	UpdateLesson(context.Context, *UpdateLessonRequest) (*LessonResponse, error)
 	DeleteLesson(context.Context, *DeleteLessonRequest) (*emptypb.Empty, error)
+	GetLessons(context.Context, *GetLessonsRequest) (*ListLessonsResponse, error)
 	GetCourseContent(context.Context, *GetCourseContentRequest) (*CourseContentResponse, error)
 	mustEmbedUnimplementedCourseServiceServer()
 }
@@ -262,6 +288,9 @@ func (UnimplementedCourseServiceServer) UpdateModule(context.Context, *UpdateMod
 func (UnimplementedCourseServiceServer) DeleteModule(context.Context, *DeleteModuleRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteModule not implemented")
 }
+func (UnimplementedCourseServiceServer) GetModules(context.Context, *GetModulesRequest) (*ListModulesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetModules not implemented")
+}
 func (UnimplementedCourseServiceServer) AddLesson(context.Context, *AddLessonRequest) (*LessonResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AddLesson not implemented")
 }
@@ -270,6 +299,9 @@ func (UnimplementedCourseServiceServer) UpdateLesson(context.Context, *UpdateLes
 }
 func (UnimplementedCourseServiceServer) DeleteLesson(context.Context, *DeleteLessonRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteLesson not implemented")
+}
+func (UnimplementedCourseServiceServer) GetLessons(context.Context, *GetLessonsRequest) (*ListLessonsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetLessons not implemented")
 }
 func (UnimplementedCourseServiceServer) GetCourseContent(context.Context, *GetCourseContentRequest) (*CourseContentResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetCourseContent not implemented")
@@ -475,6 +507,24 @@ func _CourseService_DeleteModule_Handler(srv interface{}, ctx context.Context, d
 	return interceptor(ctx, in, info, handler)
 }
 
+func _CourseService_GetModules_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetModulesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CourseServiceServer).GetModules(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: CourseService_GetModules_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CourseServiceServer).GetModules(ctx, req.(*GetModulesRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _CourseService_AddLesson_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(AddLessonRequest)
 	if err := dec(in); err != nil {
@@ -525,6 +575,24 @@ func _CourseService_DeleteLesson_Handler(srv interface{}, ctx context.Context, d
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(CourseServiceServer).DeleteLesson(ctx, req.(*DeleteLessonRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _CourseService_GetLessons_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetLessonsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CourseServiceServer).GetLessons(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: CourseService_GetLessons_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CourseServiceServer).GetLessons(ctx, req.(*GetLessonsRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -595,6 +663,10 @@ var CourseService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _CourseService_DeleteModule_Handler,
 		},
 		{
+			MethodName: "GetModules",
+			Handler:    _CourseService_GetModules_Handler,
+		},
+		{
 			MethodName: "AddLesson",
 			Handler:    _CourseService_AddLesson_Handler,
 		},
@@ -605,6 +677,10 @@ var CourseService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "DeleteLesson",
 			Handler:    _CourseService_DeleteLesson_Handler,
+		},
+		{
+			MethodName: "GetLessons",
+			Handler:    _CourseService_GetLessons_Handler,
 		},
 		{
 			MethodName: "GetCourseContent",

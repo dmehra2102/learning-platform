@@ -18,9 +18,11 @@ service CourseService {
     rpc AddModule(AddModuleRequest) returns (ModuleResponse);
     rpc UpdateModule(UpdateModuleRequest) returns (ModuleResponse);
     rpc DeleteModule(DeleteModuleRequest) returns (google.protobuf.Empty);
+    rpc GetModules(GetModulesRequest) returns (ListModulesResponse);
     rpc AddLesson(AddLessonRequest) returns (LessonResponse);
     rpc UpdateLesson(UpdateLessonRequest) returns (LessonResponse);
     rpc DeleteLesson(DeleteLessonRequest) returns (google.protobuf.Empty);
+    rpc GetLessons(GetLessonsRequest) returns (ListLessonsResponse);
     rpc GetCourseContent(GetCourseContentRequest) returns (CourseContentResponse);
 }
 
@@ -159,6 +161,14 @@ message DeleteModuleRequest {
   string course_id = 2;
 }
 
+message ListModulesResponse {
+  repeated Module modules = 1;
+}
+
+message GetModulesRequest {
+  string course_id = 1;
+}
+
 message AddLessonRequest {
   string module_id = 1;
   string title = 2;
@@ -167,6 +177,7 @@ message AddLessonRequest {
   int32 duration_seconds = 5;
   int32 order_index = 6;
   bool is_preview = 7;
+  string course_id = 8;
 }
 
 message LessonResponse {
@@ -183,6 +194,14 @@ message UpdateLessonRequest {
 
 message DeleteLessonRequest {
   string id = 1;
+}
+
+message GetLessonsRequest {
+  string module_id = 1;
+}
+
+message ListLessonsResponse {
+  repeated Lesson lessons = 1; 
 }
 
 message GetCourseContentRequest {
