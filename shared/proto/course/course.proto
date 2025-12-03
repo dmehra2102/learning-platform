@@ -186,14 +186,19 @@ message LessonResponse {
 
 message UpdateLessonRequest {
   string id = 1;
-  optional string title = 2;
-  optional string description = 3;
-  optional int32 order_index = 4;
-  optional bool is_preview = 5;
+  string course_id = 2;
+  string module_id = 3;
+  optional string title = 4;
+  optional string description =5;
+  optional int32 order_index = 6;
+  optional bool is_preview = 7;
+  
 }
 
 message DeleteLessonRequest {
   string id = 1;
+  string course_id = 2;
+  string module_id = 3;
 }
 
 message GetLessonsRequest {
