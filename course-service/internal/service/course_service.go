@@ -54,6 +54,12 @@ type AddLessonRequest struct {
 	IsPreview       bool
 }
 
+type UpdateLessonRequest struct {
+	Title           *string
+	Description     *string
+	IsPreview       *bool
+}
+
 type CourseService interface {
 	CreateCourse(ctx context.Context, instructorID string, req CreateCourseRequest) (*domain.Course, error)
 	PublishCourse(ctx context.Context, courseID, instructorID string) (*domain.Course, error)
@@ -67,7 +73,7 @@ type CourseService interface {
 	DeleteModule(ctx context.Context, moduleID, courseID, instructorID string) error
 	GetModules(ctx context.Context, courseID string) ([]*domain.Module, error)
 	AddLesson(ctx context.Context, moduleID, courseID, instructorID string, req AddLessonRequest) (*domain.Lesson, error)
-	UpdateLesson(ctx context.Context, lessonID, moduleID, courseID, instructorID string, req AddLessonRequest) (*domain.Lesson, error)
+	UpdateLesson(ctx context.Context, lessonID, moduleID, courseID, instructorID string, req UpdateLessonRequest) (*domain.Lesson, error)
 	DeleteLesson(ctx context.Context, lessonID, moduleID, courseID, instructorID string) error
 	GetLessons(ctx context.Context, moduleID string) ([]*domain.Lesson, error)
 }
@@ -402,7 +408,7 @@ func (s *courseService) AddLesson(ctx context.Context, moduleID, courseID, instr
 	return lesson, nil
 }
 
-func (s *courseService) UpdateLesson(ctx context.Context, lessonID, moduleID, courseID, instructorID string, req AddLessonRequest) (*domain.Lesson, error) {
+func (s *courseService) UpdateLesson(ctx context.Context, lessonID, moduleID, courseID, instructorID string, req UpdateLessonRequest) (*domain.Lesson, error) {
 	course, err := s.courseRepo.GetByID(ctx, courseID)
 	if err != nil {
 		return nil, err
@@ -431,11 +437,15 @@ func (s *courseService) UpdateLesson(ctx context.Context, lessonID, moduleID, co
 		return nil, fmt.Errorf("lesson does not belong to module")
 	}
 
-	lesson.Title = req.Title
-	lesson.Description = req.Description
-	lesson.VideoID = req.VideoID
-	lesson.DurationSeconds = req.DurationSeconds
-	lesson.IsPreview = req.IsPreview
+	if req.Title != nil {
+		lesson.Title = *req.Title
+	}
+	if req.Description != nil {
+		lesson.Description = *req.Description
+	}
+	if req.IsPreview != nil {
+		lesson.IsPreview = *req.IsPreview
+	}
 
 	if err := lesson.Validate(); err != nil {
 		return nil, err

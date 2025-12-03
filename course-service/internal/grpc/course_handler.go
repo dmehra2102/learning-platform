@@ -46,7 +46,7 @@ func (h *CourseHandler) CreateCourse(ctx context.Context, req *pb.CreateCourseRe
 }
 
 func (h *CourseHandler) GetCourse(ctx context.Context, req *pb.GetCourseRequest) (*pb.CourseResponse, error) {
-	course, err := h.service.GetCourse(ctx, req.GetId())
+	course, err := h.service.GetCourse(ctx, req.Id)
 	if err != nil {
 		if err == domain.ErrCourseNotFound {
 			return nil, status.Error(codes.NotFound, "course not found")
@@ -184,7 +184,7 @@ func (h *CourseHandler) GetCoursesByInstructor(ctx context.Context, req *pb.GetC
 		pageSize = 10
 	}
 
-	courses,total,err := h.service.GetInstructorCourses(ctx, req.InstructorId, page, pageSize)
+	courses, total, err := h.service.GetInstructorCourses(ctx, req.InstructorId, page, pageSize)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
@@ -195,11 +195,11 @@ func (h *CourseHandler) GetCoursesByInstructor(ctx context.Context, req *pb.GetC
 	}
 
 	return &pb.ListCoursesResponse{
-		Courses: pbCourses,
-		Total: int32(total),
-		Page: req.Page,
+		Courses:  pbCourses,
+		Total:    int32(total),
+		Page:     req.Page,
 		PageSize: req.PageSize,
-	},nil
+	}, nil
 }
 
 func (h *CourseHandler) AddModule(ctx context.Context, req *pb.AddModuleRequest) (*pb.ModuleResponse, error) {
@@ -209,7 +209,7 @@ func (h *CourseHandler) AddModule(ctx context.Context, req *pb.AddModuleRequest)
 	}
 
 	module, err := h.service.AddModule(ctx, req.CourseId, instructorID, service.AddModuleRequest{
-		Title: req.Title,
+		Title:       req.Title,
 		Description: req.Description,
 	})
 
@@ -227,12 +227,12 @@ func (h *CourseHandler) AddModule(ctx context.Context, req *pb.AddModuleRequest)
 }
 
 func (h *CourseHandler) UpdateModule(ctx context.Context, req *pb.UpdateModuleRequest) (*pb.ModuleResponse, error) {
-	instructorID,err := interceptor.GetUserID(ctx)
+	instructorID, err := interceptor.GetUserID(ctx)
 	if err != nil {
 		return nil, status.Error(codes.Unauthenticated, "unauthorized")
 	}
 
-	module,err := h.service.UpdateModule(ctx, req.Id,*req.CourseID, instructorID, *req.Title, *req.Description)
+	module, err := h.service.UpdateModule(ctx, req.Id, *req.CourseId, instructorID, *req.Title, *req.Description)
 	if err != nil {
 		if err == domain.ErrUnauthorized {
 			return nil, status.Error(codes.PermissionDenied, "unauthorized")
@@ -245,21 +245,123 @@ func (h *CourseHandler) UpdateModule(ctx context.Context, req *pb.UpdateModuleRe
 
 	return &pb.ModuleResponse{Module: moduleToProto(module)}, nil
 }
+
 func (h *CourseHandler) DeleteModule(ctx context.Context, req *pb.DeleteModuleRequest) (*emptypb.Empty, error) {
-	instructorID,err := interceptor.GetUserID(ctx)
+	instructorID, err := interceptor.GetUserID(ctx)
 	if err != nil {
 		return nil, status.Error(codes.Unauthenticated, "unauthorized")
 	}
 
-	h.service.DeleteModule(ctx, req.Id)
+	if err := h.service.DeleteModule(ctx, req.Id, req.CourseId, instructorID); err != nil {
+		if err == domain.ErrUnauthorized {
+			return nil, status.Error(codes.PermissionDenied, "unauthorized")
+		}
+		if err == domain.ErrCourseNotFound {
+			return nil, status.Error(codes.NotFound, "not found")
+		}
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return &emptypb.Empty{}, nil
 }
-func (h *CourseHandler) AddLesson(context.Context, *pb.AddLessonRequest) (*pb.LessonResponse, error) {
+
+func (h *CourseHandler) GetModules(ctx context.Context, req *pb.GetModulesRequest) (*pb.ListModulesResponse, error) {
+	modules, err := h.service.GetModules(ctx, req.CourseId)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	pbModules := make([]*pb.Module, len(modules))
+	for i, module := range modules {
+		pbModules[i] = moduleToProto(module)
+	}
+
+	return &pb.ListModulesResponse{Modules: pbModules}, nil
 }
-func (h *CourseHandler) UpdateLesson(context.Context, *pb.UpdateLessonRequest) (*pb.LessonResponse, error) {
+
+func (h *CourseHandler) AddLesson(ctx context.Context, req *pb.AddLessonRequest) (*pb.LessonResponse, error) {
+	instructorID, err := interceptor.GetUserID(ctx)
+	if err != nil {
+		return nil, status.Error(codes.Unauthenticated, "unauthorized")
+	}
+
+	lesson, err := h.service.AddLesson(ctx, req.ModuleId, req.CourseId, instructorID, service.AddLessonRequest{
+		Title:           req.Title,
+		Description:     req.Description,
+		VideoID:         req.VideoId,
+		DurationSeconds: int(req.DurationSeconds),
+		IsPreview:       req.IsPreview,
+	})
+
+	if err != nil {
+		if err == domain.ErrUnauthorized {
+			return nil, status.Error(codes.PermissionDenied, "unauthorized")
+		}
+		if err == domain.ErrCourseNotFound {
+			return nil, status.Error(codes.NotFound, "not found")
+		}
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return &pb.LessonResponse{Lesson: lessonToProto(lesson)}, nil
 }
-func (h *CourseHandler) DeleteLesson(context.Context, *pb.DeleteLessonRequest) (*emptypb.Empty, error) {
+
+func (h *CourseHandler) UpdateLesson(ctx context.Context, req *pb.UpdateLessonRequest) (*pb.LessonResponse, error) {
+	instructorID, err := interceptor.GetUserID(ctx)
+	if err != nil {
+		return nil, status.Error(codes.Unauthenticated, "unauthorized")
+	}
+
+	lesson, err := h.service.UpdateLesson(ctx, req.Id, req.ModuleId, req.CourseId, instructorID, service.UpdateLessonRequest{
+		Title:           req.Title,
+		Description:     req.Description,
+		IsPreview:       req.IsPreview,
+	})
+
+	if err != nil {
+		if err == domain.ErrUnauthorized {
+			return nil, status.Error(codes.PermissionDenied, "unauthorized")
+		}
+		if err == domain.ErrCourseNotFound {
+			return nil, status.Error(codes.NotFound, "not found")
+		}
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return &pb.LessonResponse{Lesson: lessonToProto(lesson)}, nil
 }
-func (h *CourseHandler) GetCourseContent(context.Context, *pb.GetCourseContentRequest) (*pb.CourseContentResponse, error) {
+
+func (h *CourseHandler) DeleteLesson(ctx context.Context, req *pb.DeleteLessonRequest) (*emptypb.Empty, error) {
+	instructorID, err := interceptor.GetUserID(ctx)
+	if err != nil {
+		return nil, status.Error(codes.Unauthenticated, "unauthorized")
+	}
+
+	if err := h.service.DeleteLesson(ctx, req.Id, req.ModuleId, req.CourseId, instructorID); err != nil {
+		if err == domain.ErrUnauthorized {
+			return nil, status.Error(codes.PermissionDenied, "unauthorized")
+		}
+		if err == domain.ErrCourseNotFound {
+			return nil, status.Error(codes.NotFound, "not found")
+		}
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return &emptypb.Empty{}, nil
+}
+
+func (h *CourseHandler) GetLessons(ctx context.Context, req *pb.GetLessonsRequest) (*pb.ListLessonsResponse, error) {
+	lessons, err := h.service.GetLessons(ctx, req.ModuleId)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	pbLessons := make([]*pb.Lesson, len(lessons))
+	for i, lesson := range lessons {
+		pbLessons[i] = lessonToProto(lesson)
+	}
+
+	return &pb.ListLessonsResponse{Lessons: pbLessons}, nil
 }
 
 func courseToProto(course *domain.Course) *pb.Course {

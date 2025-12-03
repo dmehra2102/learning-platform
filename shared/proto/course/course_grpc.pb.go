@@ -35,7 +35,6 @@ const (
 	CourseService_UpdateLesson_FullMethodName           = "/course.CourseService/UpdateLesson"
 	CourseService_DeleteLesson_FullMethodName           = "/course.CourseService/DeleteLesson"
 	CourseService_GetLessons_FullMethodName             = "/course.CourseService/GetLessons"
-	CourseService_GetCourseContent_FullMethodName       = "/course.CourseService/GetCourseContent"
 )
 
 // CourseServiceClient is the client API for CourseService service.
@@ -57,7 +56,6 @@ type CourseServiceClient interface {
 	UpdateLesson(ctx context.Context, in *UpdateLessonRequest, opts ...grpc.CallOption) (*LessonResponse, error)
 	DeleteLesson(ctx context.Context, in *DeleteLessonRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	GetLessons(ctx context.Context, in *GetLessonsRequest, opts ...grpc.CallOption) (*ListLessonsResponse, error)
-	GetCourseContent(ctx context.Context, in *GetCourseContentRequest, opts ...grpc.CallOption) (*CourseContentResponse, error)
 }
 
 type courseServiceClient struct {
@@ -218,16 +216,6 @@ func (c *courseServiceClient) GetLessons(ctx context.Context, in *GetLessonsRequ
 	return out, nil
 }
 
-func (c *courseServiceClient) GetCourseContent(ctx context.Context, in *GetCourseContentRequest, opts ...grpc.CallOption) (*CourseContentResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(CourseContentResponse)
-	err := c.cc.Invoke(ctx, CourseService_GetCourseContent_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 // CourseServiceServer is the server API for CourseService service.
 // All implementations must embed UnimplementedCourseServiceServer
 // for forward compatibility.
@@ -247,7 +235,6 @@ type CourseServiceServer interface {
 	UpdateLesson(context.Context, *UpdateLessonRequest) (*LessonResponse, error)
 	DeleteLesson(context.Context, *DeleteLessonRequest) (*emptypb.Empty, error)
 	GetLessons(context.Context, *GetLessonsRequest) (*ListLessonsResponse, error)
-	GetCourseContent(context.Context, *GetCourseContentRequest) (*CourseContentResponse, error)
 	mustEmbedUnimplementedCourseServiceServer()
 }
 
@@ -302,9 +289,6 @@ func (UnimplementedCourseServiceServer) DeleteLesson(context.Context, *DeleteLes
 }
 func (UnimplementedCourseServiceServer) GetLessons(context.Context, *GetLessonsRequest) (*ListLessonsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetLessons not implemented")
-}
-func (UnimplementedCourseServiceServer) GetCourseContent(context.Context, *GetCourseContentRequest) (*CourseContentResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetCourseContent not implemented")
 }
 func (UnimplementedCourseServiceServer) mustEmbedUnimplementedCourseServiceServer() {}
 func (UnimplementedCourseServiceServer) testEmbeddedByValue()                       {}
@@ -597,24 +581,6 @@ func _CourseService_GetLessons_Handler(srv interface{}, ctx context.Context, dec
 	return interceptor(ctx, in, info, handler)
 }
 
-func _CourseService_GetCourseContent_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetCourseContentRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(CourseServiceServer).GetCourseContent(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: CourseService_GetCourseContent_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(CourseServiceServer).GetCourseContent(ctx, req.(*GetCourseContentRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 // CourseService_ServiceDesc is the grpc.ServiceDesc for CourseService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -681,10 +647,6 @@ var CourseService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetLessons",
 			Handler:    _CourseService_GetLessons_Handler,
-		},
-		{
-			MethodName: "GetCourseContent",
-			Handler:    _CourseService_GetCourseContent_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

@@ -23,7 +23,6 @@ service CourseService {
     rpc UpdateLesson(UpdateLessonRequest) returns (LessonResponse);
     rpc DeleteLesson(DeleteLessonRequest) returns (google.protobuf.Empty);
     rpc GetLessons(GetLessonsRequest) returns (ListLessonsResponse);
-    rpc GetCourseContent(GetCourseContentRequest) returns (CourseContentResponse);
 }
 
 enum CourseStatus {
