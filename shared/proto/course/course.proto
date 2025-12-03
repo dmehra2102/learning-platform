@@ -156,6 +156,7 @@ message UpdateModuleRequest {
 
 message DeleteModuleRequest {
   string id = 1;
+  string course_id = 2;
 }
 
 message AddLessonRequest {
