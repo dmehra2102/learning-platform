@@ -37,12 +37,12 @@ type Enrollment struct {
 }
 
 type EnrollmentEvent struct {
-	EnnrollmentID string
-	UserID        string
-	CourseID      string
-	Status        EnrollmentStatus
-	Amount        float64
-	Timestamp     time.Time
+	EnrollmentID string
+	UserID       string
+	CourseID     string
+	Status       EnrollmentStatus
+	Amount       float64
+	Timestamp    time.Time
 }
 
 func (e *Enrollment) Validate() error {
