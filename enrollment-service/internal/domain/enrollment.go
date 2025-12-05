@@ -32,7 +32,7 @@ type Enrollment struct {
 	AmountPaid         float64
 	PaymentID          string
 	EnrolledAt         time.Time
-	CompletedAt        time.Time
+	CompletedAt        *time.Time
 	ProgressPercentage int
 }
 
